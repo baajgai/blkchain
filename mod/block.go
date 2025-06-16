@@ -2,14 +2,16 @@ package mod
 
 import (
 	"crypto/sha256"
-	"math"
+	"encoding/hex"
+	"fmt"
+	"math/rand/v2"
 )
 
 // Block structure
 type Block struct {
 	Index        uint32
 	TimeStamp    uint64
-	Hash         []byte
+	Hash         [32]byte
 	PrevBlock    [32]byte
 	Nonce        uint64
 	Transactions []Transaction
@@ -22,7 +24,7 @@ func NewBlock(index uint32, timestamp uint64, prev_block [32]byte, transactions 
 	return &Block{
 		Index:        index,
 		TimeStamp:    timestamp,
-		Hash:         make([]byte, 32), // Fill 32-length zeros
+		Hash:         [32]byte{0}, // Fill 32-length zeros
 		PrevBlock:    prev_block,
 		Transactions: transactions,
 		Difficulty:   difficulty,
@@ -61,17 +63,20 @@ func (b Block) Bytes() []byte {
 
 // Mines bytes
 func (b *Block) Mine() {
-	max64 := uint64(math.MaxUint64)
+	rand_num := rand.Int32N(500)
 
-	for nonce_attempt := range max64 {
-		b.Nonce = nonce_attempt
+	for i := 0; i < int(rand_num); i++ {
+
+		b.Nonce = uint64(i)
 
 		hash := sha256.Sum256(b.Bytes())
 
+		fmt.Printf("HASH FROM MINE %v\n", hex.EncodeToString(hash[:]))
 		if CheckDifficulty(hash[:], b.Difficulty) {
-			b.Hash = hash[:]
+			b.Hash = hash
 			return
 		}
+
 	}
 }
 

@@ -1,8 +1,9 @@
 package mod
 
 import (
-	Consts "blkchain/consts"
 	"crypto/sha256"
+
+	Consts "github.com/baajgai/blkchain/consts"
 )
 
 // Blockchain struct contains blocks as a chain
