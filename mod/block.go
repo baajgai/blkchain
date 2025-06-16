@@ -2,7 +2,9 @@ package mod
 
 import (
 	"crypto/sha256"
-	"math/rand/v2"
+	"encoding/hex"
+	"fmt"
+	"strings"
 )
 
 // Block structure
@@ -61,23 +63,27 @@ func (b Block) Bytes() []byte {
 
 // Mines bytes
 func (b *Block) Mine() {
-	rand_num := rand.Int32N(500)
 
-	for i := 0; i < int(rand_num); i++ {
+	targetPrefix := strings.Repeat("6", int(b.Difficulty))
 
-		b.Nonce = uint64(i)
+	fmt.Println("Target prefix and difficulty : ", targetPrefix, b.Difficulty)
+	nonce := 0
+	for {
 
-		hash := sha256.Sum256(b.Bytes())
+		b.Nonce = uint64(nonce)
 
-		// if CheckDifficulty(hash[:], b.Difficulty) {
-		b.Hash = hash
-		return
-		// }
+		hash := sha256.Sum256([]byte(b.Bytes()))
+		hashStr := hex.EncodeToString(hash[:])
+
+		fmt.Println("Hash generating ... ", hashStr)
+		if strings.HasPrefix(hashStr, targetPrefix) {
+			b.Hash = hash
+			fmt.Println("Hash Found: ", hex.EncodeToString(b.Hash[:]))
+			return
+		}
+
+		nonce++
 
 	}
-}
 
-// Checks difficulty level of hash
-func CheckDifficulty(hash []byte, difficulty uint64) bool {
-	return difficulty > DifficultyBytesAsU128(hash)
 }

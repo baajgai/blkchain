@@ -15,13 +15,8 @@ type BlockChain struct {
 func (bc *BlockChain) UpdateWithBlock(b *Block) error {
 
 	isize := len(bc.Chain)
-	checksum := sha256.Sum256(b.Bytes())
 	if b.Index != uint32(isize) {
 		return Consts.MismatchedIndex
-
-	} else if !CheckDifficulty(checksum[:], b.Difficulty) {
-
-		return Consts.InvalidHash
 
 	} else if isize != 0 {
 

@@ -17,7 +17,9 @@ func main() {
 
 	var empty_prev_block [32]byte
 
-	block := mod.NewBlock(0, uint64(time.Now().Unix()), empty_prev_block, []mod.Transaction{}, 100)
+	difficulty := 2
+
+	block := mod.NewBlock(0, uint64(time.Now().Unix()), empty_prev_block, []mod.Transaction{}, uint64(difficulty))
 	log.Println("Start mining first genesis block...")
 	block.Mine()
 
@@ -28,7 +30,7 @@ func main() {
 	}
 
 	for i := 1; i < 100; i++ {
-		block := mod.NewBlock(uint32(i), uint64(time.Now().Unix()), last_hash, []mod.Transaction{}, 200)
+		block := mod.NewBlock(uint32(i), uint64(time.Now().Unix()), last_hash, []mod.Transaction{}, uint64(difficulty))
 		block.Mine()
 
 		fmt.Printf("Prev block hash === %s\n", hex.EncodeToString(last_hash[:]))
@@ -37,11 +39,13 @@ func main() {
 		copy(last_hash[:], block.Hash[:])
 		blockchain.Chain = append(blockchain.Chain, *block)
 
+		fmt.Println("INDEXXX : ", block.Index)
 	}
 
 	fmt.Println("Total blocks : ", len(blockchain.Chain))
 	for _, block := range blockchain.Chain {
-		fmt.Printf("block in block chain %+v\n", block.Hash)
+		fmt.Printf("prev hash in block chain %s\n", hex.EncodeToString(block.PrevBlock[:]))
+		fmt.Printf("block in block chain %s\n", hex.EncodeToString(block.Hash[:]))
 	}
 
 }
