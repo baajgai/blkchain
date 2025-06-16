@@ -2,8 +2,6 @@ package mod
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
 	"math/rand/v2"
 )
 
@@ -71,11 +69,10 @@ func (b *Block) Mine() {
 
 		hash := sha256.Sum256(b.Bytes())
 
-		fmt.Printf("HASH FROM MINE %v\n", hex.EncodeToString(hash[:]))
-		if CheckDifficulty(hash[:], b.Difficulty) {
-			b.Hash = hash
-			return
-		}
+		// if CheckDifficulty(hash[:], b.Difficulty) {
+		b.Hash = hash
+		return
+		// }
 
 	}
 }

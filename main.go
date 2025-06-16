@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -20,24 +21,25 @@ func main() {
 	log.Println("Start mining first genesis block...")
 	block.Mine()
 
-	fmt.Println("Mine genesis block : \n", block)
-
 	last_hash := sha256.Sum256(block.Bytes())
 
 	blockchain := mod.BlockChain{
 		Chain: []mod.Block{*block},
 	}
 
-	for i := 0; i < 300; i++ {
+	for i := 1; i < 100; i++ {
 		block := mod.NewBlock(uint32(i), uint64(time.Now().Unix()), last_hash, []mod.Transaction{}, 200)
 		block.Mine()
 
-		fmt.Printf("Mined new block: %+v\n", block)
+		fmt.Printf("Prev block hash === %s\n", hex.EncodeToString(last_hash[:]))
+		fmt.Printf("Own block hash === %s\n", hex.EncodeToString(block.Hash[:]))
 
+		copy(last_hash[:], block.Hash[:])
 		blockchain.Chain = append(blockchain.Chain, *block)
 
 	}
 
+	fmt.Println("Total blocks : ", len(blockchain.Chain))
 	for _, block := range blockchain.Chain {
 		fmt.Printf("block in block chain %+v\n", block.Hash)
 	}
