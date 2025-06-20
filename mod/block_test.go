@@ -1,24 +1,23 @@
-package main
+package mod
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"math/rand"
+	"math/rand/v2"
+	"testing"
 	"time"
 
 	"github.com/baajgai/blkchain/mod"
 )
 
-// Main function
-func main() {
-
+func TestBlock(t *testing.T) {
 	var empty_prev_block [32]byte
 
 	// set hash difficulty here...
 	difficulty := 1
 
-	block := mod.NewBlock(0, uint64(time.Now().Unix()), empty_prev_block, []mod.Transaction{}, uint64(difficulty))
+	block := NewBlock(0, uint64(time.Now().Unix()), empty_prev_block, []mod.Transaction{}, uint64(difficulty))
 
 	block.Mine()
 
@@ -32,7 +31,6 @@ func main() {
 
 		tx := mod.NewTransaction("addresstoBaajgai", "addressFromBaajgai", rand.Uint64()+uint64(i))
 		tx.SignTransaction()
-
 		block := mod.NewBlock(uint32(i), uint64(time.Now().Unix()), last_hash, []mod.Transaction{}, uint64(difficulty))
 
 		block.Transactions = append(block.Transactions, *tx)
@@ -47,5 +45,4 @@ func main() {
 		fmt.Printf("prev hash in block chain %s\n", hex.EncodeToString(block.PrevBlockHash[:]))
 		fmt.Printf("block in block chain %s\n", hex.EncodeToString(block.Hash[:]))
 	}
-
 }

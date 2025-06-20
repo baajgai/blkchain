@@ -24,21 +24,17 @@ func (bc *BlockChain) UpdateWithBlock(b *Block) error {
 		prev_block_hash := sha256.Sum256(prev_block.Bytes())
 		if b.TimeStamp <= prev_block.TimeStamp {
 			return Consts.AchronologicalTimeStamp
-		} else if b.PrevBlock != prev_block_hash {
+		} else if b.PrevBlockHash != prev_block_hash {
 			return Consts.MismatchedPreviousHash
 		}
 
 	} else {
-		if !isNotAllZero(b.PrevBlock) {
+		if !isNotAllZero(b.PrevBlockHash) {
 			return Consts.InvalidGenesisBlockFormat
 		}
 	}
 
 	if len(b.Transactions) > 0 {
-		first_tx := b.Transactions[0]
-		if first_tx.IsCoinbase() {
-			return Consts.InvalidCoinBaseTransaction
-		}
 
 		// todo: set block spent hash here
 		// block_spent := NewHashSet()

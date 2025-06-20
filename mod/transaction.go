@@ -1,108 +1,64 @@
 package mod
 
-import "crypto/sha256"
+import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"math/big"
+)
 
-// Output struct contains destination address and the value
-type Output struct {
-	ToAddress string
-	Value     uint64
-}
-
-func (o Output) Bytes() []byte {
-	var bytes []byte
-
-	// Add address as bytes
-	addr := []byte(o.ToAddress)
-	bytes = append(bytes, addr[:]...)
-
-	// Add value as bytes
-	val_bytes := U64Bytes(o.Value)
-	bytes = append(bytes, val_bytes[:]...)
-
-	return bytes
-}
-
-// Transaction struct contains inputs and outputs
+// Transaction struct contains source/destination addresses and the value
 type Transaction struct {
-	Inputs  []Output
-	Outputs []Output
+	ToAddress   string // Receiver address
+	FromAddress string // Sender address
+	Value       uint64 // Transaction value
+	Signature   []byte // Signature
 }
 
-func (t *Transaction) InputValue() uint64 {
-
-	var sum uint64
-
-	for _, val := range t.Inputs {
-
-		sum = sum + val.Value
+func NewTransaction(to_address, from_address string, value uint64) *Transaction {
+	return &Transaction{
+		ToAddress:   to_address,
+		FromAddress: from_address,
+		Value:       value,
 	}
-
-	return sum
-
 }
 
-func (t Transaction) OutputValue() uint64 {
+func (tx *Transaction) Hash() [32]byte {
+	data, _ := json.Marshal(tx)
 
-	var sum uint64
-
-	for _, val := range t.Outputs {
-
-		sum = sum + val.Value
-	}
-
-	return sum
-
+	return sha256.Sum256(data)
 }
 
-func (t Transaction) InputHash() *HashSet {
+func (tx *Transaction) SignTransaction() {
+	privateKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	publicKey := &privateKey.PublicKey
 
-	var checksum [32]byte
-	hashSet := NewHashSet(len(t.Inputs))
+	fmt.Println(" Pub key = ", publicKey)
+	tx.Signature = nil
+	hashedTx := tx.Hash()
+	r, s, _ := ecdsa.Sign(rand.Reader, privateKey, hashedTx[:])
+	signature := append(r.Bytes(), s.Bytes()...)
+	tx.Signature = signature
 
-	for _, input := range t.Inputs {
-
-		checksum = sha256.Sum256(input.Bytes())
-		hashSet.Add(checksum)
-
-	}
-	return hashSet
+	fmt.Printf("Signed Transaction: %s\n", hex.EncodeToString(tx.Signature))
 
 }
 
-func (t Transaction) OutputHash() *HashSet {
+func (tx *Transaction) VerifyTransaction(pub *ecdsa.PublicKey) bool {
 
-	var checksum [32]byte
-	hashSet := NewHashSet(len(t.Outputs))
+	// Save and clear signature to hash same data
+	sign := tx.Signature
+	tx.Signature = nil
 
-	for _, output := range t.Outputs {
+	hashedTx := tx.Hash()
+	tx.Signature = sign
 
-		checksum = sha256.Sum256(output.Bytes())
-		hashSet.Add(checksum)
+	r := new(big.Int).SetBytes(sign[:len(sign)/2])
+	s := new(big.Int).SetBytes(sign[len(sign)/2:])
 
-	}
-
-	return hashSet
-
-}
-
-func (t Transaction) Bytes() []byte {
-
-	var bytes []byte
-
-	for _, input := range t.Inputs {
-
-		bytes = append(bytes, input.Bytes()...)
-	}
-
-	for _, output := range t.Outputs {
-
-		bytes = append(bytes, output.Bytes()...)
-	}
-
-	return bytes
-
-}
-
-func (t *Transaction) IsCoinbase() bool {
-	return len(t.Inputs) == 0
+	return ecdsa.Verify(pub, hashedTx[:], r, s)
 }

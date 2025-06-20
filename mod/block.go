@@ -9,25 +9,26 @@ import (
 
 // Block structure
 type Block struct {
-	Index        uint32
-	TimeStamp    uint64
-	Hash         [32]byte
-	PrevBlock    [32]byte
-	Nonce        uint64
-	Transactions []Transaction
-	Difficulty   uint64
+	Index         uint32        // Index of block
+	TimeStamp     uint64        // Block create time
+	Hash          [32]byte      // Block's hash
+	PrevBlockHash [32]byte      // Previous block's hash
+	Nonce         uint64        // Nonce
+	Transactions  []Transaction // Block's transaction list
+	MerkleRoot    [32]byte      // Merkle root
+	Difficulty    uint64        // Hash difficulty
 }
 
 // Creates a new block constructor
 func NewBlock(index uint32, timestamp uint64, prev_block [32]byte, transactions []Transaction, difficulty uint64) *Block {
 
 	return &Block{
-		Index:        index,
-		TimeStamp:    timestamp,
-		Hash:         [32]byte{0}, // Fill 32-length zeros
-		PrevBlock:    prev_block,
-		Transactions: transactions,
-		Difficulty:   difficulty,
+		Index:         index,
+		TimeStamp:     timestamp,
+		Hash:          [32]byte{0}, // Fill 32-length zeros
+		PrevBlockHash: prev_block,
+		Transactions:  transactions,
+		Difficulty:    difficulty,
 	}
 }
 
@@ -44,7 +45,10 @@ func (b Block) Bytes() []byte {
 	bytes = append(bytes, tstamp_bytes[:]...)
 
 	// Add Previous block as bytes
-	bytes = append(bytes, b.PrevBlock[:]...)
+	bytes = append(bytes, b.PrevBlockHash[:]...)
+
+	// Add Merkle root as bytes
+	bytes = append(bytes, b.MerkleRoot[:]...)
 
 	// Add Nonce as bytes
 	nonce_bytes := U64Bytes(b.Nonce)
@@ -55,7 +59,8 @@ func (b Block) Bytes() []byte {
 	bytes = append(bytes, diff_bytes[:]...)
 
 	for _, tx := range b.Transactions {
-		bytes = append(bytes, tx.Bytes()[:]...)
+		hash := tx.Hash()
+		bytes = append(bytes, hash[:]...)
 	}
 
 	return bytes
